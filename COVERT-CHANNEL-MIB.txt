@@ -1,0 +1,180 @@
+COVERT-CHANNEL-MIB DEFINITIONS ::= BEGIN
+
+-- Imports
+
+IMPORTS
+	MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+	Integer32, Unsigned32,  Counter64, experimental
+		FROM SNMPv2-SMI
+	TEXTUAL-CONVENTION, DisplayString
+		FROM SNMPv2-TC
+	OBJECT-GROUP
+		FROM SNMPv2-CONF;
+
+-- Description and update information
+
+covertchannelmib MODULE-IDENTITY
+	LAST-UPDATED "201505111633Z"
+	ORGANIZATION "UvA SNE"
+	CONTACT-INFO
+			"Author: Martin Leucht
+			EMail: <martin.leucht@os3.nl"
+
+	DESCRIPTION
+		"COVERT-CHANNEL-MIB"
+
+	REVISION "201505111733Z"
+	DESCRIPTION
+		"ML: Textual Conventions"
+  	REVISION "201505111833Z"
+  	DESCRIPTION
+    		"first revision"  
+  ::= { experimental 100 }
+
+
+
+-- Definition of MIB's root nodes
+
+
+ covertchannelObjects OBJECT IDENTIFIER      		::= { covertchannelmib 1 }
+ covertchannelMIBConformance OBJECT IDENTIFIER 		::= { covertchannelmib 2 }
+ covertchannelGeneral OBJECT IDENTIFIER      		::= { covertchannelObjects 1 }
+ covertchannelGlobal OBJECT IDENTIFIER   		::= { covertchannelObjects 2 }
+ covertchannelClient OBJECT IDENTIFIER       	::= { covertchannelObjects 3 }
+
+-- Textual Conventions
+
+CustomString ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT    "116t"
+    STATUS          current
+    DESCRIPTION
+        "An octet string containing characters in UTF-8 encoding."
+    SYNTAX          OCTET STRING (SIZE (1..116))
+
+
+-- End Textual conventions
+
+-- covertchannel MIB
+
+-- Top level objects
+
+covertChannelChecksum OBJECT-TYPE
+ SYNTAX      DisplayString
+ MAX-ACCESS  read-write
+ STATUS      current
+ DESCRIPTION
+    "Checksum"
+ ::= { covertchannelGeneral 1 }
+
+-- covertchannelGlobalTable 
+
+covertchannelGlobalTable OBJECT-TYPE
+   SYNTAX      SEQUENCE OF CovertchannelGlobalEntry
+   MAX-ACCESS  not-accessible
+   STATUS      current
+   DESCRIPTION
+     "Table to hide base64 encoded data chunks"
+   ::= { covertchannelGlobal 2 }
+
+covertchannelGlobalEntry OBJECT-TYPE
+  SYNTAX      CovertchannelGlobalEntry
+  MAX-ACCESS  not-accessible
+  STATUS      current
+  DESCRIPTION
+     "Description"
+  INDEX { covertchannelGlobalIndex }
+  ::= { covertchannelGlobalTable 1 }
+
+ covertchannelGlobalEntry ::= SEQUENCE {
+          covertchannelGlobalIndex               CustomString,
+          covertchannelGlobalFirstEntry          Counter64}
+
+
+ covertchannelGlobalIndex OBJECT-TYPE
+   SYNTAX       CustomString
+   MAX-ACCESS   not-accessible
+   STATUS       current
+   DESCRIPTION
+     "Base64 encoded chunks here"
+   ::= { covertchannelGlobalEntry 1 }
+
+ covertchannelGlobalFirstEntry OBJECT-TYPE
+   SYNTAX       Counter64
+   MAX-ACCESS   read-only
+   STATUS       current
+   DESCRIPTION
+     "actual chunks"
+   ::= { covertchannelGlobalEntry 2 }
+
+ 
+-- covertchannelClientTable
+
+covertchannelClientTable OBJECT-TYPE
+   SYNTAX      SEQUENCE OF covertchannelClientEntry
+   MAX-ACCESS  not-accessible
+   STATUS      current
+   DESCRIPTION
+     "Table for filename and SHA1 hash"     
+   ::= { covertchannelClient 3 }
+
+covertchannelClientEntry OBJECT-TYPE
+  SYNTAX      covertchannelClientEntry
+  MAX-ACCESS  not-accessible
+  STATUS      current
+  DESCRIPTION
+     "Description"
+   INDEX {covertchannelClientIndex }
+   ::= { covertchannelClientTable 1 }
+
+covertchannelClientEntry ::= SEQUENCE {
+          covertchannelClientIndex                CustomString,
+          covertchannelClientFirstEntry           CustomString}
+
+covertchannelClientIndex OBJECT-TYPE
+   SYNTAX       CustomString
+   MAX-ACCESS   not-accessible
+   STATUS       current
+   DESCRIPTION
+     "Reference index"
+   ::= { covertchannelClientEntry 1 }
+
+covertchannelClientFirstEntry OBJECT-TYPE
+   SYNTAX       CustomString
+   MAX-ACCESS   read-only
+   STATUS       current
+   DESCRIPTION
+     "Description"
+   ::= { covertchannelClientEntry 2 }
+
+
+-- Conformance Statements for covertchannel
+
+
+covertchannelMIBGroups       OBJECT IDENTIFIER   ::= { covertchannelMIBConformance 1 }
+covertchannelMIBCompliances  OBJECT IDENTIFIER   ::= { covertchannelMIBConformance 2 }
+
+covertchannelMIBScalarGroup OBJECT-GROUP
+  OBJECTS {
+      covertChannelChecksum
+         }
+  STATUS      current
+  DESCRIPTION
+     "All accessible scalar objects in that MIB.
+     "
+  ::= { covertchannelMIBGroups 1 }
+
+
+covertchannelMIBTableGroup OBJECT-GROUP
+  OBJECTS {
+  covertchannelGlobalFirstEntry,
+  covertchannelClientFirstEntry
+	}
+  STATUS      current
+  DESCRIPTION
+     "All accessible table objects in that MIB.
+     "
+  ::= { covertchannelMIBGroups 2 }
+
+END
+
+
